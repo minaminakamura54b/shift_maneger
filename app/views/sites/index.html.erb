@@ -1,0 +1,40 @@
+<% content_for :title, "現場一覧 - シフト管理" %>
+
+<div class="py-6">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold text-gray-800">現場一覧</h1>
+    <%= link_to "＋ 新規登録", new_site_path, class: "bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-4 py-2 rounded-lg transition" %>
+  </div>
+
+  <% if @sites.any? %>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <% @sites.each do |site| %>
+        <div class="bg-white rounded-xl shadow hover:shadow-md transition">
+          <%= link_to site, class: "block p-5" do %>
+            <div class="flex items-start justify-between mb-3">
+              <span class="text-2xl">&#127970;</span>
+              <span class="text-xs bg-blue-100 text-blue-700 font-medium px-2 py-1 rounded-full">
+                <%= site.start_date&.strftime("%Y/%m/%d") %>
+              </span>
+            </div>
+            <h2 class="text-lg font-bold text-gray-800 mb-1"><%= site.name %></h2>
+            <p class="text-sm text-gray-500 mb-2"><%= site.address.presence || "住所未登録" %></p>
+            <% if site.end_date %>
+              <p class="text-xs text-gray-400">〜 <%= site.end_date.strftime("%Y/%m/%d") %></p>
+            <% end %>
+          <% end %>
+          <div class="border-t border-gray-100 px-5 py-3 flex gap-3">
+            <%= link_to "編集", edit_site_path(site), class: "text-sm text-blue-600 hover:underline" %>
+            <%= link_to "削除", site, data: { turbo_method: :delete, turbo_confirm: "「#{site.name}」を削除してもよいですか？" }, class: "text-sm text-red-500 hover:underline" %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="bg-white rounded-xl shadow p-10 text-center">
+      <p class="text-4xl mb-4">&#127970;</p>
+      <p class="text-gray-500 mb-4">現場がまだ登録されていません</p>
+      <%= link_to "最初の現場を登録する", new_site_path, class: "bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-4 py-2 rounded-lg transition" %>
+    </div>
+  <% end %>
+</div>

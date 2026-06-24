@@ -1,0 +1,70 @@
+<% content_for :title, "#{@site.name} - シフト管理" %>
+
+<div class="py-6">
+  <%# パンくずリスト %>
+  <nav class="text-sm text-gray-500 mb-4">
+    <%= link_to "現場一覧", sites_path, class: "hover:underline" %>
+    <span class="mx-2">/</span>
+    <span class="text-gray-800"><%= @site.name %></span>
+  </nav>
+
+  <%# 現場詳細カード %>
+  <div class="bg-white rounded-xl shadow p-6 mb-6">
+    <div class="flex items-start justify-between mb-4">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-800 mb-1"><%= @site.name %></h1>
+        <p class="text-gray-500"><%= @site.address.presence || "住所未登録" %></p>
+      </div>
+      <div class="flex gap-2">
+        <%= link_to "編集", edit_site_path(@site), class: "bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-3 py-2 rounded-lg transition" %>
+        <%= link_to "削除", @site, data: { turbo_method: :delete, turbo_confirm: "「#{@site.name}」を削除してもよいですか？" }, class: "bg-red-100 hover:bg-red-200 text-red-700 text-sm font-medium px-3 py-2 rounded-lg transition" %>
+      </div>
+    </div>
+    <div class="grid grid-cols-2 gap-4 text-sm">
+      <div>
+        <p class="text-gray-400 text-xs mb-1">開始日</p>
+        <p class="font-medium text-gray-800"><%= @site.start_date&.strftime("%Y年%m月%d日") || "未設定" %></p>
+      </div>
+      <div>
+        <p class="text-gray-400 text-xs mb-1">終了日</p>
+        <p class="font-medium text-gray-800"><%= @site.end_date&.strftime("%Y年%m月%d日") || "未設定" %></p>
+      </div>
+    </div>
+  </div>
+
+  <%# この現場への配置一覧 %>
+  <div class="bg-white rounded-xl shadow p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-lg font-semibold text-gray-700">配置社員一覧</h2>
+      <%= link_to "＋ 配置登録", new_assignment_path, class: "text-sm text-blue-600 hover:underline" %>
+    </div>
+    <% if @assignments.any? %>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-gray-200">
+              <th class="text-left py-2 font-medium text-gray-500">社員名</th>
+              <th class="text-left py-2 font-medium text-gray-500">開始日</th>
+              <th class="text-left py-2 font-medium text-gray-500">終了日</th>
+              <th class="text-left py-2 font-medium text-gray-500"></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            <% @assignments.each do |assignment| %>
+              <tr class="hover:bg-gray-50">
+                <td class="py-3 font-medium text-gray-800"><%= assignment.employee.name %></td>
+                <td class="py-3 text-gray-600"><%= assignment.start_date&.strftime("%Y/%m/%d") %></td>
+                <td class="py-3 text-gray-600"><%= assignment.end_date&.strftime("%Y/%m/%d") || "—" %></td>
+                <td class="py-3">
+                  <%= link_to "詳細", assignment, class: "text-blue-600 hover:underline" %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <p class="text-sm text-gray-400 text-center py-4">配置社員がいません</p>
+    <% end %>
+  </div>
+</div>

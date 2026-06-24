@@ -1,0 +1,13 @@
+<% content_for :title, "配置編集 - シフト管理" %>
+
+<div class="py-6 max-w-lg">
+  <nav class="text-sm text-gray-500 mb-4">
+    <%= link_to "配置一覧", assignments_path, class: "hover:underline" %>
+    <span class="mx-2">/</span>
+    <span class="text-gray-800">編集</span>
+  </nav>
+  <h1 class="text-2xl font-bold text-gray-800 mb-6">配置編集</h1>
+  <div class="bg-white rounded-xl shadow p-6">
+    <%= render "form", assignment: @assignment, sites: @sites, employees: @employees %>
+  </div>
+</div>
