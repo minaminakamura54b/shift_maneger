@@ -3,7 +3,9 @@
 <div class="py-6">
   <div class="flex items-center justify-between mb-6">
     <h1 class="text-2xl font-bold text-gray-800">社員一覧</h1>
-    <%= link_to "＋ 新規登録", new_employee_path, class: "bg-green-600 hover:bg-green-500 text-white text-sm font-medium px-4 py-2 rounded-lg transition" %>
+    <% if current_user.admin? %>
+      <%= link_to "＋ 新規登録", new_employee_path, class: "bg-green-600 hover:bg-green-500 text-white text-sm font-medium px-4 py-2 rounded-lg transition" %>
+    <% end %>
   </div>
 
   <% if @employees.any? %>
@@ -26,8 +28,10 @@
               <td class="px-4 py-3 text-gray-600 hidden sm:table-cell"><%= employee.email %></td>
               <td class="px-4 py-3 text-gray-600 hidden md:table-cell"><%= employee.phone.presence || "—" %></td>
               <td class="px-4 py-3 flex gap-3">
-                <%= link_to "編集", edit_employee_path(employee), class: "text-blue-600 hover:underline" %>
-                <%= link_to "削除", employee, data: { turbo_method: :delete, turbo_confirm: "「#{employee.name}」を削除してもよいですか？" }, class: "text-red-500 hover:underline" %>
+                <% if can_manage_employee?(employee) %>
+                  <%= link_to "編集", edit_employee_path(employee), class: "text-blue-600 hover:underline" %>
+                  <%= link_to "削除", employee, data: { turbo_method: :delete, turbo_confirm: "「#{employee.name}」を削除してもよいですか？" }, class: "text-red-500 hover:underline" %>
+                <% end %>
               </td>
             </tr>
           <% end %>

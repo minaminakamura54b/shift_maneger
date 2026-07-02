@@ -1,13 +1,13 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
-one:
+alice_assignment:
   site: one
-  employee: one
+  employee: alice
   start_date: 2026-06-24
   end_date: 2026-06-24
 
-two:
+bob_assignment:
   site: two
-  employee: two
-  start_date: 2026-06-24
-  end_date: 2026-06-24
+  employee: bob
+  start_date: 2026-06-25
+  end_date: 2026-06-25
