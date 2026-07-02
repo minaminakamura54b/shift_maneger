@@ -13,20 +13,40 @@
 
   <div>
     <%= f.label :employee_id, "社員", class: "block text-sm font-medium text-gray-700 mb-1" %>
-    <%= f.select :employee_id,
-                 options_for_select(employees.map { |e| [e.name, e.id] }, assignment.employee_id),
-                 { prompt: "社員を選択してください" },
-                 class: "w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" %>
+    <% if employees.length == 1 %>
+      <%# 一般ユーザー: 自分のみ固定表示 %>
+      <%= f.hidden_field :employee_id, value: employees.first.id %>
+      <p class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-700">
+        <%= employees.first.name %>
+      </p>
+    <% else %>
+      <%# 管理者: 全社員から選択 %>
+      <%= f.select :employee_id,
+                   options_for_select(employees.map { |e| [e.name, e.id] }, assignment.employee_id),
+                   { prompt: "社員を選択してください" },
+                   class: "w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" %>
+    <% end %>
   </div>
 
   <div>
-    <%= f.label :site_id, "現場", class: "block text-sm font-medium text-gray-700 mb-1" %>
-    <%= f.select :site_id,
-                 options_for_select(sites.map { |s| [s.name, s.id] }, assignment.site_id),
-                 { prompt: "現場を選択してください" },
-                 class: "w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" %>
+    <label class="block text-sm font-medium text-gray-700 mb-1">現場</label>
+    <%# 既存の現場はサジェスト、未登録の名前を入力すると自動作成される %>
+    <input type="text"
+           name="assignment[site_name]"
+           list="sites-datalist"
+           value="<%= assignment.display_site_name == "（現場未設定）" ? "" : assignment.display_site_name %>"
+           placeholder="現場名を入力または選択"
+           autocomplete="off"
+           class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400">
+    <datalist id="sites-datalist">
+      <% sites.each do |site| %>
+        <option value="<%= site.name %>">
+      <% end %>
+    </datalist>
+    <p class="text-xs text-gray-400 mt-1">現場名を入力すると候補が表示されます。登録済みの現場のみ選択できます</p>
   </div>
 
+  <%# 日付 %>
   <div class="grid grid-cols-2 gap-4">
     <div>
       <%= f.label :start_date, "開始日", class: "block text-sm font-medium text-gray-700 mb-1" %>
@@ -36,6 +56,32 @@
       <%= f.label :end_date, "終了日", class: "block text-sm font-medium text-gray-700 mb-1" %>
       <%= f.date_field :end_date, class: "w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" %>
     </div>
+  </div>
+
+  <%# 時刻（任意）— 指定するとカレンダーにグリッド表示される %>
+  <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+    <p class="text-sm font-medium text-gray-700 mb-3">
+      勤務時刻
+      <span class="ml-2 text-xs font-normal text-gray-400">（任意）指定するとカレンダーに時間帯で表示されます</span>
+    </p>
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <%= f.label :start_time, "開始時刻", class: "block text-xs font-medium text-gray-600 mb-1" %>
+        <%= f.time_field :start_time,
+            class: "w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white",
+            value: assignment.start_time&.strftime("%H:%M") %>
+      </div>
+      <div>
+        <%= f.label :end_time, "終了時刻", class: "block text-xs font-medium text-gray-600 mb-1" %>
+        <%= f.time_field :end_time,
+            class: "w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white",
+            value: assignment.end_time&.strftime("%H:%M") %>
+      </div>
+    </div>
+    <%# どちらかだけ入力されている場合の注意 %>
+    <p class="text-xs text-gray-400 mt-2">
+      ※ 時刻を入力する場合は開始・終了の両方を入力してください（どちらか一方でも可）
+    </p>
   </div>
 
   <div class="flex gap-3 pt-2">

@@ -1,5 +1,5 @@
-<p>Welcome <%= @email %>!</p>
+<p><%= @email %> 様</p>
 
-<p>You can confirm your account email through the link below:</p>
+<p>シフト管理へのご登録ありがとうございます。以下のリンクからメールアドレスの確認を行ってください。</p>
 
-<p><%= link_to 'Confirm my account', confirmation_url(@resource, confirmation_token: @token) %></p>
+<p><%= link_to "アカウントを確認する", confirmation_url(@resource, confirmation_token: @token) %></p>

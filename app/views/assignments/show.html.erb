@@ -10,10 +10,12 @@
   <div class="bg-white rounded-xl shadow p-6">
     <div class="flex items-start justify-between mb-6">
       <h1 class="text-xl font-bold text-gray-800">配置詳細</h1>
-      <div class="flex gap-2">
-        <%= link_to "編集", edit_assignment_path(@assignment), class: "bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-3 py-2 rounded-lg transition" %>
-        <%= link_to "削除", @assignment, data: { turbo_method: :delete, turbo_confirm: "この配置を削除してもよいですか？" }, class: "bg-red-100 hover:bg-red-200 text-red-700 text-sm font-medium px-3 py-2 rounded-lg transition" %>
-      </div>
+      <% if can_manage_assignment?(@assignment) %>
+        <div class="flex gap-2">
+          <%= link_to "編集", edit_assignment_path(@assignment), class: "bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-3 py-2 rounded-lg transition" %>
+          <%= link_to "削除", @assignment, data: { turbo_method: :delete, turbo_confirm: "この配置を削除してもよいですか？" }, class: "bg-red-100 hover:bg-red-200 text-red-700 text-sm font-medium px-3 py-2 rounded-lg transition" %>
+        </div>
+      <% end %>
     </div>
 
     <dl class="space-y-4">
@@ -26,7 +28,11 @@
       <div>
         <dt class="text-xs text-gray-400 mb-1">現場</dt>
         <dd class="font-medium text-gray-800">
-          <%= link_to @assignment.site.name, @assignment.site, class: "text-blue-600 hover:underline" %>
+          <% if @assignment.site %>
+            <%= link_to @assignment.display_site_name, @assignment.site, class: "text-blue-600 hover:underline" %>
+          <% else %>
+            <%= @assignment.display_site_name %>
+          <% end %>
         </dd>
       </div>
       <div class="grid grid-cols-2 gap-4">
@@ -39,6 +45,19 @@
           <dd class="font-medium text-gray-800"><%= @assignment.end_date&.strftime("%Y年%m月%d日") || "未設定" %></dd>
         </div>
       </div>
+      <%# 勤務時刻（指定されている場合のみ表示） %>
+      <% if @assignment.timed? %>
+        <div class="grid grid-cols-2 gap-4 pt-2 border-t border-gray-100">
+          <div>
+            <dt class="text-xs text-gray-400 mb-1">開始時刻</dt>
+            <dd class="font-medium text-gray-800"><%= @assignment.start_time.strftime("%H:%M") %></dd>
+          </div>
+          <div>
+            <dt class="text-xs text-gray-400 mb-1">終了時刻</dt>
+            <dd class="font-medium text-gray-800"><%= @assignment.end_time&.strftime("%H:%M") || "未設定" %></dd>
+          </div>
+        </div>
+      <% end %>
     </dl>
   </div>
 </div>

@@ -25,13 +25,19 @@
                 <%= link_to assignment.employee.name, assignment.employee, class: "hover:text-green-600" %>
               </td>
               <td class="px-4 py-3 text-gray-600">
-                <%= link_to assignment.site.name, assignment.site, class: "hover:text-blue-600" %>
+                <% if assignment.site %>
+                  <%= link_to assignment.display_site_name, assignment.site, class: "hover:text-blue-600" %>
+                <% else %>
+                  <%= assignment.display_site_name %>
+                <% end %>
               </td>
               <td class="px-4 py-3 text-gray-600 hidden sm:table-cell"><%= assignment.start_date&.strftime("%Y/%m/%d") %></td>
               <td class="px-4 py-3 text-gray-600 hidden md:table-cell"><%= assignment.end_date&.strftime("%Y/%m/%d") || "—" %></td>
               <td class="px-4 py-3 flex gap-3">
-                <%= link_to "編集", edit_assignment_path(assignment), class: "text-blue-600 hover:underline" %>
-                <%= link_to "削除", assignment, data: { turbo_method: :delete, turbo_confirm: "この配置を削除してもよいですか？" }, class: "text-red-500 hover:underline" %>
+                <% if can_manage_assignment?(assignment) %>
+                  <%= link_to "編集", edit_assignment_path(assignment), class: "text-blue-600 hover:underline" %>
+                  <%= link_to "削除", assignment, data: { turbo_method: :delete, turbo_confirm: "この配置を削除してもよいですか？" }, class: "text-red-500 hover:underline" %>
+                <% end %>
               </td>
             </tr>
           <% end %>

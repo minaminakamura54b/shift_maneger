@@ -1,5 +1,7 @@
 class EmployeesController < ApplicationController
-  before_action :set_employee, only: %i[show edit update destroy]
+  before_action :set_employee,        only: %i[show edit update destroy]
+  before_action :require_admin!,       only: %i[new create]
+  before_action :require_own_or_admin!, only: %i[edit update destroy]
 
   def index
     @employees = Employee.order(:name)
