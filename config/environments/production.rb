@@ -58,7 +58,10 @@ Rails.application.configure do
   # config.action_mailer.raise_delivery_errors = false
 
   # Set host to be used by links generated in mailer templates.
-  config.action_mailer.default_url_options = { host: ENV.fetch("APP_HOST", "example.com") }
+  config.action_mailer.default_url_options = {
+    host:     ENV.fetch("APP_HOST", "example.com"),
+    protocol: ENV.fetch("APP_PROTOCOL", "http")
+  }
 
   # メール送信は Resend の API 経由（config/initializers/resend.rb で API キーを設定）
   config.action_mailer.delivery_method = :resend
