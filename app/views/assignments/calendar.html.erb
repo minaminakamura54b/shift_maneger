@@ -107,7 +107,7 @@
               <% @employees.each do |emp| %>
                 <td style="padding:2px; vertical-align:top; border-right:1px solid #e5e7eb; min-height:32px;">
                   <% emp_day[emp.id].reject(&:timed?).each do |a| %>
-                    <% hue = (a.site_id || a.site_name.to_s.sum) * 61 % 360 %>
+                    <% hue = site_color_hue(a.site_id || a.site_name) %>
                     <%= link_to assignment_path(a), title: a.display_site_name,
                           style: "display:block; background:hsl(#{hue},60%,48%); color:#fff;
                                   border-radius:3px; padding:2px 6px; margin:1px;
@@ -149,7 +149,7 @@
                   <td style="border-right:1px solid #e5e7eb; padding:0; height:28px; vertical-align:top;
                              <%= cell_bg ? "background:#{cell_bg};" : "" %>">
                     <% covering.each do |a| %>
-                      <% hue = (a.site_id || a.site_name.to_s.sum) * 61 % 360 %>
+                      <% hue = site_color_hue(a.site_id || a.site_name) %>
                       <% is_start = (a.start_time.hour * 60 + a.start_time.min) == slot_mins %>
                       <%= link_to assignment_path(a), title: a.display_site_name,
                             style: "display:block; height:100%;
@@ -235,7 +235,7 @@
                         data-drag-date="<%= date %>"
                       <% end %>>
                     <% day_assignments.each do |a| %>
-                      <% hue = (a.site_id || a.site_name.to_s.sum) * 61 % 360 %>
+                      <% hue = site_color_hue(a.site_id || a.site_name) %>
                       <%= link_to assignment_path(a),
                             **(editable_row ? {
                               draggable: "true",
@@ -281,7 +281,7 @@
   <% if used_sites.any? %>
     <div class="mt-4 flex flex-wrap gap-3">
       <% used_sites.each do |site| %>
-        <% hue = (site.id * 61 + 137) % 360 %>
+        <% hue = site_color_hue(site.id) %>
         <span class="flex items-center gap-1 text-xs text-gray-700">
           <span style="display:inline-block; width:10px; height:10px; border-radius:2px;
                        background:hsl(<%= hue %>,60%,48%); flex-shrink:0;"></span>

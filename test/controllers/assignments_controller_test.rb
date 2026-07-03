@@ -67,6 +67,18 @@ class AssignmentsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  # --- 現場名を空欄で更新すると失敗し、成功メッセージが出ないこと ---
+
+  test "現場名を空欄にして更新すると失敗し編集画面に戻る" do
+    sign_in users(:alice)
+    original_site_id = @alice_assignment.site_id
+
+    patch assignment_path(@alice_assignment), params: { assignment: { site_name: "" } }
+
+    assert_response :unprocessable_entity
+    assert_equal original_site_id, @alice_assignment.reload.site_id
+  end
+
   # --- マスアサインメント対策：employee_id を書き換えて他人の配置に付け替えられない ---
 
   test "一般ユーザーは自分の配置のemployee_idを他人に書き換えられない" do
@@ -98,6 +110,20 @@ class AssignmentsControllerTest < ActionDispatch::IntegrationTest
     sign_in users(:alice)
     get assignment_path(@bob_assignment)
     assert_response :success
+  end
+
+  test "存在しない配置IDへのアクセスは404相当であり権限エラー文言にならない" do
+    sign_in users(:alice)
+    get assignment_path(id: Assignment.maximum(:id).to_i + 1000)
+    assert_redirected_to assignments_path
+    assert_equal "指定された配置が見つかりません", flash[:alert]
+  end
+
+  test "他人の配置の編集は403相当で権限エラー文言になる" do
+    sign_in users(:alice)
+    patch assignment_path(@bob_assignment), params: { assignment: { start_date: "2026-07-01" } }
+    assert_redirected_to assignments_path
+    assert_equal "自分の配置のみ編集・削除できます", flash[:alert]
   end
 
   test "一般ユーザーの詳細画面には他人の配置に編集・削除リンクが出ない" do

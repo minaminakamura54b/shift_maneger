@@ -99,14 +99,11 @@ class AssignmentsController < ApplicationController
   end
 
   def update
-    params[:assignment]&.delete(:employee_id) unless current_user.admin?
+    @assignment.assign_attributes(assignment_params)
+    # フォームから site_name が来た場合のみ現場を解決（D&D時は無視）
+    @assignment.site = resolve_site(@assignment.site_name) if assignment_params.key?(:site_name)
 
-    if @assignment.update(assignment_params)
-      # フォームから site_name が来た場合のみ現場を解決（D&D時は無視）
-      if assignment_params.key?(:site_name)
-        @assignment.site = resolve_site(@assignment.site_name)
-        @assignment.save
-      end
+    if @assignment.save
       respond_to do |format|
         format.html { redirect_to @assignment, notice: "配置情報を更新しました" }
         format.json { render json: { ok: true } }
@@ -141,11 +138,19 @@ class AssignmentsController < ApplicationController
     @assignment = scope.includes(:site, :employee).find(params[:id])
   end
 
-  # 権限外の配置IDを指定された場合の応答
+  # 配置が見つからない／権限外の場合の応答（show は単純な404、edit/update/destroy は権限メッセージ）
   def assignment_not_found
+    if %w[edit update destroy].include?(action_name)
+      alert  = "自分の配置のみ編集・削除できます"
+      status = :forbidden
+    else
+      alert  = "指定された配置が見つかりません"
+      status = :not_found
+    end
+
     respond_to do |format|
-      format.html { redirect_to assignments_path, alert: "自分の配置のみ編集・削除できます" }
-      format.json { render json: { errors: [ "自分の配置のみ編集・削除できます" ] }, status: :forbidden }
+      format.html { redirect_to assignments_path, alert: alert }
+      format.json { render json: { errors: [ alert ] }, status: status }
     end
   end
 
@@ -170,14 +175,14 @@ class AssignmentsController < ApplicationController
   # 現場名から既存の Site を検索（新規作成はしない）
   def resolve_site(name)
     return nil if name.blank?
-    Site.find_by(name: name.strip)
+    # 前後や連続する空白の表記ゆれで別現場として扱われないよう正規化して検索
+    Site.find_by(name: name.squish)
   end
 
+  # employee_id は管理者のみ変更可能（一般ユーザーは自分の配置に固定）
   def assignment_params
-    params.require(:assignment).permit(
-      :employee_id, :site_name,
-      :start_date, :end_date,
-      :start_time, :end_time
-    )
+    attrs = %i[site_name start_date end_date start_time end_time]
+    attrs << :employee_id if current_user.admin?
+    params.require(:assignment).permit(*attrs)
   end
 end

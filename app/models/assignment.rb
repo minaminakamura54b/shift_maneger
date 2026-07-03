@@ -17,27 +17,6 @@ class Assignment < ApplicationRecord
     start_time.present?
   end
 
-  # カレンダー表示用の開始日時文字列
-  def calendar_start
-    if timed?
-      "#{start_date}T#{start_time.strftime('%H:%M')}"
-    else
-      start_date.to_s
-    end
-  end
-
-  # カレンダー表示用の終了日時文字列
-  def calendar_end
-    end_d = end_date || start_date
-    if timed? && end_time.present?
-      "#{end_d}T#{end_time.strftime('%H:%M')}"
-    elsif timed?
-      "#{end_d}T#{start_time.strftime('%H:%M')}"
-    else
-      (end_d + 1.day).to_s
-    end
-  end
-
   private
 
   def end_date_after_start_date

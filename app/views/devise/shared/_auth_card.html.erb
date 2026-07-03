@@ -1,0 +1,20 @@
+<%# ログイン/登録/パスワード再設定/確認メール再送で共通の中央寄せカードレイアウト %>
+<div class="min-h-screen flex items-center justify-center bg-gray-50 py-10 px-4">
+  <div class="w-full max-w-md">
+    <div class="text-center mb-8">
+      <p class="text-4xl mb-2"><%= emoji.html_safe %></p>
+      <h1 class="text-2xl font-bold text-gray-800"><%= title %></h1>
+      <% if local_assigns[:subtitle].present? %>
+        <p class="text-sm text-gray-500 mt-1"><%= subtitle %></p>
+      <% end %>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-lg p-8">
+      <%= yield %>
+
+      <div class="mt-6 text-center text-sm text-gray-500 space-y-2">
+        <%= render "devise/shared/links" %>
+      </div>
+    </div>
+  </div>
+</div>
