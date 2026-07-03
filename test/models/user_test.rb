@@ -28,4 +28,17 @@ class UserTest < ActiveSupport::TestCase
 
     assert_nil User.find_by(email: "broken-sync@example.com")
   end
+
+  test "ユーザーを削除すると紐づく社員レコードと配置も削除される" do
+    user     = User.create!(email: "leaving@example.com", password: "password", name: "退職太郎")
+    employee = Employee.find_by(email: "leaving@example.com")
+    site     = Site.create!(name: "テスト現場", address: "テスト住所", start_date: "2026-01-01", end_date: "2026-12-31")
+    Assignment.create!(employee: employee, site: site, start_date: "2026-07-01")
+
+    assert_difference [ "Employee.count", "Assignment.count" ], -1 do
+      user.destroy
+    end
+
+    assert_nil Employee.find_by(email: "leaving@example.com")
+  end
 end

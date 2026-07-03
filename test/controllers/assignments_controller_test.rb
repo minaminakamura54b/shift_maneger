@@ -79,6 +79,31 @@ class AssignmentsControllerTest < ActionDispatch::IntegrationTest
     assert_equal original_site_id, @alice_assignment.reload.site_id
   end
 
+  # --- 現場ごと表記でのドラッグ&ドロップ（site_id の直接更新） ---
+
+  test "一般ユーザーは自分の配置のsite_idを別の現場に変更できる（現場ごと表記でのD&D）" do
+    sign_in users(:alice)
+
+    patch assignment_path(@alice_assignment),
+          params: { assignment: { site_id: sites(:two).id, start_date: @alice_assignment.start_date } }.to_json,
+          headers: { "Content-Type" => "application/json", "Accept" => "application/json" }
+
+    assert_response :success
+    assert_equal sites(:two).id, @alice_assignment.reload.site_id
+  end
+
+  test "存在しないsite_idを指定すると更新に失敗する" do
+    sign_in users(:alice)
+    original_site_id = @alice_assignment.site_id
+
+    patch assignment_path(@alice_assignment),
+          params: { assignment: { site_id: Site.maximum(:id).to_i + 1000 } }.to_json,
+          headers: { "Content-Type" => "application/json", "Accept" => "application/json" }
+
+    assert_response :unprocessable_entity
+    assert_equal original_site_id, @alice_assignment.reload.site_id
+  end
+
   # --- マスアサインメント対策：employee_id を書き換えて他人の配置に付け替えられない ---
 
   test "一般ユーザーは自分の配置のemployee_idを他人に書き換えられない" do

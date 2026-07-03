@@ -7,42 +7,29 @@
   </div>
 
   <% if @assignments.any? %>
-    <div class="bg-white rounded-xl shadow overflow-hidden">
-      <table class="w-full text-sm">
-        <thead class="bg-gray-50 border-b border-gray-200">
-          <tr>
-            <th class="text-left px-4 py-3 font-medium text-gray-500">社員名</th>
-            <th class="text-left px-4 py-3 font-medium text-gray-500">現場名</th>
-            <th class="text-left px-4 py-3 font-medium text-gray-500 hidden sm:table-cell">開始日</th>
-            <th class="text-left px-4 py-3 font-medium text-gray-500 hidden md:table-cell">終了日</th>
-            <th class="text-left px-4 py-3 font-medium text-gray-500">操作</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-100">
-          <% @assignments.each do |assignment| %>
-            <tr class="hover:bg-gray-50 transition">
-              <td class="px-4 py-3 font-medium text-gray-800">
-                <%= link_to assignment.employee.name, assignment.employee, class: "hover:text-green-600" %>
-              </td>
-              <td class="px-4 py-3 text-gray-600">
-                <% if assignment.site %>
-                  <%= link_to assignment.display_site_name, assignment.site, class: "hover:text-blue-600" %>
-                <% else %>
-                  <%= assignment.display_site_name %>
-                <% end %>
-              </td>
-              <td class="px-4 py-3 text-gray-600 hidden sm:table-cell"><%= assignment.start_date&.strftime("%Y/%m/%d") %></td>
-              <td class="px-4 py-3 text-gray-600 hidden md:table-cell"><%= assignment.end_date&.strftime("%Y/%m/%d") || "—" %></td>
-              <td class="px-4 py-3 flex gap-3">
-                <% if can_manage_assignment?(assignment) %>
-                  <%= link_to "編集", edit_assignment_path(assignment), class: "text-blue-600 hover:underline" %>
-                  <%= link_to "削除", assignment, data: { turbo_method: :delete, turbo_confirm: "この配置を削除してもよいですか？" }, class: "text-red-500 hover:underline" %>
-                <% end %>
-              </td>
-            </tr>
+    <%# スマホでは横に情報を詰め込んだ表だと現場名などが折り返して読みにくいため、
+        現場一覧と同じカード形式で表示する %>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <% @assignments.each do |assignment| %>
+        <div class="bg-white rounded-xl shadow hover:shadow-md transition">
+          <%= link_to assignment, class: "block p-4" do %>
+            <div class="flex items-start justify-between gap-2 mb-2">
+              <span class="font-medium text-gray-800"><%= assignment.employee.name %></span>
+              <span class="text-xs text-gray-400 whitespace-nowrap"><%= assignment.start_date&.strftime("%Y/%m/%d") %></span>
+            </div>
+            <p class="text-sm text-gray-600"><%= assignment.display_site_name %></p>
+            <% if assignment.end_date %>
+              <p class="text-xs text-gray-400 mt-1">〜 <%= assignment.end_date.strftime("%Y/%m/%d") %></p>
+            <% end %>
           <% end %>
-        </tbody>
-      </table>
+          <% if can_manage_assignment?(assignment) %>
+            <div class="border-t border-gray-100 px-4 py-2 flex gap-3">
+              <%= link_to "編集", edit_assignment_path(assignment), class: "text-sm text-blue-600 hover:underline" %>
+              <%= link_to "削除", assignment, data: { turbo_method: :delete, turbo_confirm: "この配置を削除してもよいですか？" }, class: "text-sm text-red-500 hover:underline" %>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
     </div>
   <% else %>
     <div class="bg-white rounded-xl shadow p-10 text-center">

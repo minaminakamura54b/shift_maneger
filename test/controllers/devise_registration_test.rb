@@ -70,4 +70,21 @@ class DeviseRegistrationTest < ActionDispatch::IntegrationTest
     }
     assert_redirected_to root_path
   end
+
+  test "アカウント削除画面から削除すると社員レコードと配置も一緒に削除される" do
+    alice    = users(:alice)
+    employee = employees(:alice)
+    assignment_ids = employee.assignments.ids
+    assert_not_empty assignment_ids
+
+    sign_in alice
+
+    assert_difference [ "User.count", "Employee.count" ], -1 do
+      delete user_registration_path
+    end
+    assert_redirected_to root_path
+
+    assert_nil Employee.find_by(id: employee.id)
+    assignment_ids.each { |id| assert_nil Assignment.find_by(id: id) }
+  end
 end

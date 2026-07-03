@@ -3,10 +3,17 @@ class AssignmentsController < ApplicationController
   before_action :set_own_assignment, only: %i[edit update destroy]
   rescue_from ActiveRecord::RecordNotFound, with: :assignment_not_found
 
-  # カレンダービュー（縦=社員、横=日付）
+  # カレンダービュー（全体表記=縦:社員 / 現場ごと表記=縦:現場、横=日付）
   def calendar
     @view_mode = params[:view].presence_in(%w[day week month]) || "month"
+    @group_by  = params[:by].presence_in(%w[employee site]) || "employee"
+    @site_id   = params[:site_id].presence
     today      = Date.today
+
+    # 日/週/月・全体/現場ごとを切り替えても現在の絞り込みを引き継ぐための共通パラメータ
+    @carry_params = { by: @group_by }
+    @carry_params[:site_id] = @site_id if @site_id
+    carry = @carry_params
 
     case @view_mode
     when "day"
@@ -15,9 +22,9 @@ class AssignmentsController < ApplicationController
       @end_date   = @base_date
       wday        = %w[日 月 火 水 木 金 土][@base_date.wday]
       @title      = @base_date.strftime("%Y年%-m月%-d日（#{wday}）")
-      @prev_path  = calendar_assignments_path(view: "day",   **ymd(@base_date - 1))
-      @next_path  = calendar_assignments_path(view: "day",   **ymd(@base_date + 1))
-      @today_path = calendar_assignments_path(view: "day",   **ymd(today))
+      @prev_path  = calendar_assignments_path(carry.merge(view: "day",   **ymd(@base_date - 1)))
+      @next_path  = calendar_assignments_path(carry.merge(view: "day",   **ymd(@base_date + 1)))
+      @today_path = calendar_assignments_path(carry.merge(view: "day",   **ymd(today)))
       @prev_label = "‹ 前日"
       @next_label = "翌日 ›"
 
@@ -26,9 +33,9 @@ class AssignmentsController < ApplicationController
       @start_date = @base_date.beginning_of_week(:monday)
       @end_date   = @start_date + 6.days
       @title      = "#{@start_date.strftime('%Y年%-m月%-d日')} 〜 #{@end_date.strftime('%-m月%-d日')}"
-      @prev_path  = calendar_assignments_path(view: "week",  **ymd(@start_date - 7))
-      @next_path  = calendar_assignments_path(view: "week",  **ymd(@start_date + 7))
-      @today_path = calendar_assignments_path(view: "week",  **ymd(today))
+      @prev_path  = calendar_assignments_path(carry.merge(view: "week",  **ymd(@start_date - 7)))
+      @next_path  = calendar_assignments_path(carry.merge(view: "week",  **ymd(@start_date + 7)))
+      @today_path = calendar_assignments_path(carry.merge(view: "week",  **ymd(today)))
       @prev_label = "‹ 前週"
       @next_label = "翌週 ›"
 
@@ -40,28 +47,42 @@ class AssignmentsController < ApplicationController
       @title      = @start_date.strftime("%Y年%-m月")
       prev_m      = @start_date.prev_month
       next_m      = @start_date.next_month
-      @prev_path  = calendar_assignments_path(view: "month", year: prev_m.year, month: prev_m.month)
-      @next_path  = calendar_assignments_path(view: "month", year: next_m.year, month: next_m.month)
-      @today_path = calendar_assignments_path(view: "month")
+      @prev_path  = calendar_assignments_path(carry.merge(view: "month", year: prev_m.year, month: prev_m.month))
+      @next_path  = calendar_assignments_path(carry.merge(view: "month", year: next_m.year, month: next_m.month))
+      @today_path = calendar_assignments_path(carry.merge(view: "month"))
       @prev_label = "‹ 前月"
       @next_label = "翌月 ›"
     end
 
+    # 表示位置を保ったまま「日/週/月」や「全体/現場ごと」を切り替えるためのパラメータ
+    @position_params = @view_mode == "month" ? { year: @start_date.year, month: @start_date.month } : ymd(@base_date)
+
     @dates     = (@start_date..@end_date).to_a
     @employees = Employee.order(:name)
+    @sites     = Site.order(:name)
 
-    # 表示期間と重なる配置を取得
-    @assignments = Assignment.includes(:site)
-                             .where("start_date <= ?", @end_date)
-                             .where("COALESCE(end_date, start_date) >= ?", @start_date)
+    # 表示期間と重なる配置を取得（現場ごと表記で現場を絞り込んでいればそれも適用）
+    assignments_scope = Assignment.includes(:site, :employee)
+                                   .where("start_date <= ?", @end_date)
+                                   .where("COALESCE(end_date, start_date) >= ?", @start_date)
+    assignments_scope = assignments_scope.where(site_id: @site_id) if @group_by == "site" && @site_id.present?
+    @assignments = assignments_scope
 
-    # { employee_id => { date => [assignment, ...] } } のマップを構築
+    # { row_id => { date => [assignment, ...] } } のマップを構築（行の単位は社員 or 現場）
     @map = Hash.new { |h, k| h[k] = Hash.new { |h2, k2| h2[k2] = [] } }
     @assignments.each do |a|
+      row_id = @group_by == "site" ? a.site_id : a.employee_id
+      next if row_id.nil? # 現場ごと表記では、現場未登録（自由入力名のみ）の配置は対象外
       eff_end = a.end_date || a.start_date
       ([ @start_date, a.start_date ].max..[ eff_end, @end_date ].min).each do |d|
-        @map[a.employee_id][d] << a
+        @map[row_id][d] << a
       end
+    end
+
+    @rows = if @group_by == "site"
+      @site_id.present? ? @sites.select { |s| s.id.to_s == @site_id } : @sites
+    else
+      @employees
     end
   end
 
@@ -180,8 +201,9 @@ class AssignmentsController < ApplicationController
   end
 
   # employee_id は管理者のみ変更可能（一般ユーザーは自分の配置に固定）
+  # site_id は現場ごと表記でのドラッグ&ドロップ用（自分の配置の現場変更は元々誰でも可能なため制限しない）
   def assignment_params
-    attrs = %i[site_name start_date end_date start_time end_time]
+    attrs = %i[site_id site_name start_date end_date start_time end_time]
     attrs << :employee_id if current_user.admin?
     params.require(:assignment).permit(*attrs)
   end

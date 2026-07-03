@@ -6,6 +6,7 @@
   # 週/月ビュー用の列幅・文字数
   col_width  = @view_mode == "week" ? 96 : 54
   truncate_n = @view_mode == "week" ? 10  : 7
+  site_mode  = @group_by == "site"
 %>
 
 <div class="py-4 px-2 sm:px-4">
@@ -21,7 +22,33 @@
     </div>
   </div>
 
-  <%# ── ビュー切替タブ ＋ ナビゲーション ── %>
+  <%# ── 全体表記 / 現場ごと表記 タブ ＋ 現場絞り込み ── %>
+  <div class="flex flex-wrap items-center gap-3 mb-4">
+    <div class="flex rounded-lg border border-gray-300 overflow-hidden text-sm font-medium">
+      <% [["employee", "全体表記"], ["site", "現場ごと表記"]].each do |mode, label| %>
+        <% active = @group_by == mode %>
+        <%= link_to label, calendar_assignments_path(@position_params.merge(view: @view_mode, by: mode)),
+              class: "px-4 py-1.5 border-r border-gray-300 last:border-0 transition
+                      #{active ? 'bg-green-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}" %>
+      <% end %>
+    </div>
+
+    <% if site_mode %>
+      <%= form_with url: calendar_assignments_path, method: :get, class: "flex items-center gap-2" do %>
+        <%= hidden_field_tag :view, @view_mode %>
+        <%= hidden_field_tag :by, "site" %>
+        <% @position_params.each do |key, value| %>
+          <%= hidden_field_tag key, value %>
+        <% end %>
+        <%= select_tag :site_id,
+              options_for_select([[ "全現場", "" ]] + @sites.map { |s| [ s.name, s.id ] }, @site_id),
+              onchange: "this.form.requestSubmit()",
+              class: "text-sm border border-gray-300 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-green-400" %>
+      <% end %>
+    <% end %>
+  </div>
+
+  <%# ── 日 / 週 / 月 タブ ＋ ナビゲーション ── %>
   <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
 
     <%# 日 / 週 / 月 タブ %>
@@ -36,7 +63,7 @@
            else
              { view: "month" }
            end %>
-        <%= link_to label, calendar_assignments_path(tab_params),
+        <%= link_to label, calendar_assignments_path(@carry_params.merge(tab_params)),
               class: "px-4 py-1.5 border-r border-gray-300 last:border-0 transition
                       #{active ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}" %>
       <% end %>
@@ -54,24 +81,30 @@
     </div>
   </div>
 
-  <% if @employees.empty? %>
+  <% if @rows.empty? %>
     <div class="bg-white rounded-xl shadow p-10 text-center">
-      <p class="text-4xl mb-4">&#128100;</p>
-      <p class="text-gray-500 mb-4">社員が登録されていないため、カレンダーを表示できません</p>
-      <%= link_to "社員を登録する", new_employee_path,
-            class: "bg-green-600 hover:bg-green-500 text-white text-sm font-medium px-4 py-2 rounded-lg transition" %>
+      <p class="text-4xl mb-4"><%= site_mode ? "&#127970;".html_safe : "&#128100;".html_safe %></p>
+      <% if site_mode %>
+        <p class="text-gray-500 mb-4">現場が登録されていないため、カレンダーを表示できません</p>
+        <%= link_to "現場を登録する", new_site_path,
+              class: "bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-4 py-2 rounded-lg transition" %>
+      <% else %>
+        <p class="text-gray-500 mb-4">社員が登録されていないため、カレンダーを表示できません</p>
+        <%= link_to "社員を登録する", new_employee_path,
+              class: "bg-green-600 hover:bg-green-500 text-white text-sm font-medium px-4 py-2 rounded-lg transition" %>
+      <% end %>
     </div>
 
   <% elsif @view_mode == "day" %>
     <%# ══════════════════════════════════════════════════
-        日ビュー: 縦軸 = 時間、横軸 = 社員
+        日ビュー: 縦軸 = 時間、横軸 = 社員 or 現場
         ══════════════════════════════════════════════════ %>
     <%
       # 7:00 〜 20:00 を 30 分刻みのスロット（配列要素は [hour, min]）
-      time_slots = (7 * 60).step(20 * 60 - 1, 30).map { |m| [m / 60, m % 60] }
+      time_slots = (7 * 60).step(20 * 60 - 1, 30).map { |m| [ m / 60, m % 60 ] }
 
-      # 社員ごとの当日配置
-      emp_day = @employees.map { |e| [e.id, @map[e.id][@base_date]] }.to_h
+      # 行（社員 or 現場）ごとの当日配置
+      row_day = @rows.map { |r| [ r.id, @map[r.id][@base_date] ] }.to_h
     %>
 
     <div class="rounded-xl shadow overflow-hidden">
@@ -85,11 +118,11 @@
                          text-align:center; border-right:2px solid #d1d5db;">
                 時刻
               </th>
-              <% @employees.each do |emp| %>
+              <% @rows.each do |row| %>
                 <th style="min-width:120px; padding:6px 8px; text-align:center;
                            font-size:0.78rem; font-weight:700; color:#1f2937;
                            border-right:1px solid #e5e7eb;">
-                  <%= emp.name %>
+                  <%= row.name %>
                 </th>
               <% end %>
             </tr>
@@ -104,16 +137,17 @@
                          border-right:2px solid #d1d5db; vertical-align:middle;">
                 終日
               </td>
-              <% @employees.each do |emp| %>
+              <% @rows.each do |row| %>
                 <td style="padding:2px; vertical-align:top; border-right:1px solid #e5e7eb; min-height:32px;">
-                  <% emp_day[emp.id].reject(&:timed?).each do |a| %>
-                    <% hue = site_color_hue(a.site_id || a.site_name) %>
-                    <%= link_to assignment_path(a), title: a.display_site_name,
+                  <% row_day[row.id].reject(&:timed?).each do |a| %>
+                    <% hue = color_hue_for(site_mode ? a.employee_id : (a.site_id || a.site_name)) %>
+                    <% label = site_mode ? a.employee.name : a.display_site_name %>
+                    <%= link_to assignment_path(a), title: label,
                           style: "display:block; background:hsl(#{hue},60%,48%); color:#fff;
                                   border-radius:3px; padding:2px 6px; margin:1px;
                                   font-size:0.68rem; font-weight:600; text-decoration:none;
                                   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" do %>
-                      <%= a.display_site_name.truncate(15) %>
+                      <%= label.truncate(15) %>
                     <% end %>
                   <% end %>
                 </td>
@@ -135,10 +169,10 @@
                   <%= is_half ? "" : format("%d:%02d", hour, min) %>
                 </td>
 
-                <% @employees.each do |emp| %>
+                <% @rows.each do |row| %>
                   <%
                     # このスロットをカバーする時間指定配置を抽出
-                    covering = emp_day[emp.id].select do |a|
+                    covering = row_day[row.id].select do |a|
                       next false unless a.timed?
                       st_m = a.start_time.hour * 60 + a.start_time.min
                       et_m = a.end_time ? (a.end_time.hour * 60 + a.end_time.min) : (st_m + 480)
@@ -149,16 +183,17 @@
                   <td style="border-right:1px solid #e5e7eb; padding:0; height:28px; vertical-align:top;
                              <%= cell_bg ? "background:#{cell_bg};" : "" %>">
                     <% covering.each do |a| %>
-                      <% hue = site_color_hue(a.site_id || a.site_name) %>
+                      <% hue = color_hue_for(site_mode ? a.employee_id : (a.site_id || a.site_name)) %>
+                      <% label = site_mode ? a.employee.name : a.display_site_name %>
                       <% is_start = (a.start_time.hour * 60 + a.start_time.min) == slot_mins %>
-                      <%= link_to assignment_path(a), title: a.display_site_name,
+                      <%= link_to assignment_path(a), title: label,
                             style: "display:block; height:100%;
                                     background:hsl(#{hue},60%,48%);
                                     border-radius:#{is_start ? '3px 3px 0 0' : '0'};
                                     padding:#{is_start ? '2px 4px' : '0'};
                                     font-size:0.6rem; font-weight:600; color:#fff;
                                     overflow:hidden; white-space:nowrap; text-decoration:none;" do %>
-                        <%= is_start ? a.display_site_name.truncate(16) : "" %>
+                        <%= is_start ? label.truncate(16) : "" %>
                       <% end %>
                     <% end %>
                   </td>
@@ -172,9 +207,9 @@
 
   <% else %>
     <%# ══════════════════════════════════════════════════
-        週/月ビュー: 縦軸 = 社員、横軸 = 日付
+        週/月ビュー: 縦軸 = 社員 or 現場、横軸 = 日付
         ══════════════════════════════════════════════════ %>
-    <div class="rounded-xl shadow overflow-hidden" data-controller="drag-shift">
+    <div class="rounded-xl shadow overflow-hidden" data-controller="drag-shift" data-drag-shift-mode-value="<%= @group_by %>">
       <div class="overflow-x-auto">
         <% week_view = @view_mode == "week" %>
         <table style="border-collapse:collapse; <%= week_view ? 'width:100%; table-layout:fixed;' : 'table-layout:auto; min-width:max-content;' %>">
@@ -185,7 +220,7 @@
                          font-size:0.75rem; font-weight:600; color:#4b5563;
                          text-align:left; white-space:nowrap;
                          border-right:2px solid #d1d5db;">
-                社員名
+                <%= site_mode ? "現場名" : "社員名" %>
               </th>
               <% @dates.each do |date| %>
                 <%
@@ -207,16 +242,18 @@
           </thead>
 
           <tbody>
-            <% @employees.each_with_index do |employee, idx| %>
-              <% row_bg  = idx.even? ? "#ffffff" : "#f9fafb" %>
-              <% editable_row = current_user.admin? || employee.id == current_employee&.id %>
+            <% @rows.each_with_index do |row, idx| %>
+              <% row_bg = idx.even? ? "#ffffff" : "#f9fafb" %>
+              <%# 現場ごと表記では現場という単位に「持ち主」がいないため、行単位ではなく配置ごとに編集可否を判定する %>
+              <% cell_droppable = site_mode || current_user.admin? || row.id == current_employee&.id %>
               <tr style="border-bottom:1px solid #e5e7eb;">
                 <% row_h = week_view ? 72 : 48 %>
                 <td style="position:sticky; left:0; z-index:20; background:<%= row_bg %>;
                            padding:6px 12px; font-size:0.8rem; font-weight:600; color:#1f2937;
-                           white-space:nowrap; height:<%= row_h %>px;
-                           border-right:2px solid #d1d5db; vertical-align:middle;">
-                  <%= employee.name %>
+                           white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:110px;
+                           height:<%= row_h %>px;
+                           border-right:2px solid #d1d5db; vertical-align:middle;" title="<%= row.name %>">
+                  <%= row.name %>
                 </td>
 
                 <% @dates.each do |date| %>
@@ -225,29 +262,32 @@
                     sat      = date.wday == 6
                     is_today = date == Date.today
                     cell_bg  = is_today ? "#fefce8" : sun ? "#fff1f2" : sat ? "#eff6ff" : row_bg
-                    day_assignments = @map[employee.id][date]
+                    day_assignments = @map[row.id][date]
                   %>
                   <td style="background:<%= cell_bg %>; vertical-align:top;
                              padding:2px; height:<%= row_h %>px; border-right:1px solid #e5e7eb;"
-                      <% if editable_row %>
-                        data-action="dragover->drag-shift#dragover dragleave->drag-shift#dragleave drop->drag-shift#drop"
-                        data-drag-employee-id="<%= employee.id %>"
+                      <% if cell_droppable %>
+                        data-drag-row-id="<%= row.id %>"
                         data-drag-date="<%= date %>"
                       <% end %>>
                     <% day_assignments.each do |a| %>
-                      <% hue = site_color_hue(a.site_id || a.site_name) %>
+                      <% hue = color_hue_for(site_mode ? a.employee_id : (a.site_id || a.site_name)) %>
+                      <% label = site_mode ? a.employee.name : a.display_site_name %>
+                      <% editable = can_manage_assignment?(a) %>
                       <%= link_to assignment_path(a),
-                            **(editable_row ? {
-                              draggable: "true",
+                            **(editable ? {
+                              # <a>はデフォルトでネイティブドラッグ対象になり、Pointer Eventsでの
+                              # 自前ドラッグと競合してしまうため明示的に無効化する
+                              draggable: "false",
                               data: {
-                                action:           "dragstart->drag-shift#dragstart dragend->drag-shift#dragend",
-                                drag_id:          a.id,
-                                drag_start_date:  a.start_date,
-                                drag_end_date:    a.end_date,
-                                drag_employee_id: a.employee_id
+                                action:       "pointerdown->drag-shift#start pointermove->drag-shift#move pointerup->drag-shift#end pointercancel->drag-shift#cancel click->drag-shift#click",
+                                drag_id:      a.id,
+                                drag_start_date: a.start_date,
+                                drag_end_date:   a.end_date,
+                                drag_row_id:     site_mode ? a.site_id : a.employee_id
                               }
                             } : {}),
-                            title: a.display_site_name,
+                            title: label,
                             style: "display:block;
                                     background:hsl(#{hue},60%,48%);
                                     color:#fff; border-radius:3px;
@@ -256,8 +296,8 @@
                                     line-height:1.4; white-space:nowrap;
                                     overflow:hidden; text-overflow:ellipsis;
                                     max-width:#{week_view ? 'calc(100% - 4px)' : "#{col_width - 8}px"};
-                                    text-decoration:none; #{"cursor:grab;" if editable_row}" do %>
-                        <%= a.display_site_name.truncate(truncate_n) %>
+                                    text-decoration:none; #{'touch-action:none; cursor:grab;' if editable}" do %>
+                        <%= label.truncate(truncate_n) %>
                         <% if week_view && a.timed? %>
                           <br>
                           <span style="font-size:0.6rem; opacity:0.9;">
@@ -276,16 +316,16 @@
     </div>
   <% end %>
 
-  <%# 凡例（現場の色一覧）%>
-  <% used_sites = @assignments.map(&:site).compact.uniq %>
-  <% if used_sites.any? %>
+  <%# 凡例（全体表記=現場の色一覧 / 現場ごと表記=社員の色一覧）%>
+  <% legend_items = site_mode ? @assignments.map(&:employee).compact.uniq : @assignments.map(&:site).compact.uniq %>
+  <% if legend_items.any? %>
     <div class="mt-4 flex flex-wrap gap-3">
-      <% used_sites.each do |site| %>
-        <% hue = site_color_hue(site.id) %>
+      <% legend_items.each do |item| %>
+        <% hue = color_hue_for(item.id) %>
         <span class="flex items-center gap-1 text-xs text-gray-700">
           <span style="display:inline-block; width:10px; height:10px; border-radius:2px;
                        background:hsl(<%= hue %>,60%,48%); flex-shrink:0;"></span>
-          <%= site.name %>
+          <%= item.name %>
         </span>
       <% end %>
     </div>

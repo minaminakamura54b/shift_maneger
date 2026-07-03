@@ -7,8 +7,14 @@ class User < ApplicationRecord
 
   # after_create + throw :abort はレコード挿入後の中断が保証されないため before_create で行う
   before_create :sync_to_employee
+  before_destroy :destroy_linked_employee
 
   private
+
+  # アカウント削除時、紐づく社員レコード（と、その配置一覧）も削除する
+  def destroy_linked_employee
+    Employee.find_by(email: email)&.destroy
+  end
 
   def sync_to_employee
     Employee.find_or_create_by!(email: email) do |e|
