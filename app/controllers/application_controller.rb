@@ -10,7 +10,7 @@ class ApplicationController < ActionController::Base
 
   # 新規登録時に name / phone を許可
   def configure_permitted_parameters
-    devise_parameter_sanitizer.permit(:sign_up, keys: [:name, :phone])
+    devise_parameter_sanitizer.permit(:sign_up, keys: [ :name, :phone ])
   end
 
   # ログイン中ユーザーに紐づく社員レコード（メールで照合）

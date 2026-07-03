@@ -59,7 +59,7 @@ class AssignmentsController < ApplicationController
     @map = Hash.new { |h, k| h[k] = Hash.new { |h2, k2| h2[k2] = [] } }
     @assignments.each do |a|
       eff_end = a.end_date || a.start_date
-      ([@start_date, a.start_date].max..[eff_end, @end_date].min).each do |d|
+      ([ @start_date, a.start_date ].max..[ eff_end, @end_date ].min).each do |d|
         @map[a.employee_id][d] << a
       end
     end
@@ -145,7 +145,7 @@ class AssignmentsController < ApplicationController
   def assignment_not_found
     respond_to do |format|
       format.html { redirect_to assignments_path, alert: "自分の配置のみ編集・削除できます" }
-      format.json { render json: { errors: ["自分の配置のみ編集・削除できます"] }, status: :forbidden }
+      format.json { render json: { errors: [ "自分の配置のみ編集・削除できます" ] }, status: :forbidden }
     end
   end
 

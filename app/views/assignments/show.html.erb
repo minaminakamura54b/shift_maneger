@@ -29,7 +29,7 @@
         <dt class="text-xs text-gray-400 mb-1">現場</dt>
         <dd class="font-medium text-gray-800">
           <% if @assignment.site %>
-            <%= link_to @assignment.display_site_name, @assignment.site, class: "text-blue-600 hover:underline" %>
+            <%= link_to @assignment.display_site_name, site_path(@assignment.site), class: "text-blue-600 hover:underline" %>
           <% else %>
             <%= @assignment.display_site_name %>
           <% end %>
