@@ -63,4 +63,10 @@ class EmployeesControllerTest < ActionDispatch::IntegrationTest
     patch employee_path(@bob), params: { employee: { name: "Bob改" } }
     assert_equal "Bob改", @bob.reload.name
   end
+
+  test "ナビゲーションの「自分の配置」リンクは自分の社員ページを指す" do
+    sign_in users(:alice)
+    get root_path
+    assert_select "a[href=?]", employee_path(@alice), text: "自分の配置", count: 2 # デスクトップ用・モバイル用の2箇所
+  end
 end

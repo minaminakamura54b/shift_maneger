@@ -43,18 +43,18 @@
         <table class="w-full text-sm">
           <thead>
             <tr class="border-b border-gray-200">
-              <th class="text-left py-2 font-medium text-gray-500">社員名</th>
-              <th class="text-left py-2 font-medium text-gray-500">開始日</th>
-              <th class="text-left py-2 font-medium text-gray-500">終了日</th>
+              <th class="text-left py-2 pr-3 font-medium text-gray-500">社員名</th>
+              <th class="text-left py-2 pr-3 font-medium text-gray-500">開始日</th>
+              <th class="text-left py-2 pr-3 font-medium text-gray-500">終了日</th>
               <th class="text-left py-2 font-medium text-gray-500"></th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100">
             <% @assignments.each do |assignment| %>
               <tr class="hover:bg-gray-50">
-                <td class="py-3 font-medium text-gray-800"><%= assignment.employee.name %></td>
-                <td class="py-3 text-gray-600"><%= assignment.start_date&.strftime("%Y/%m/%d") %></td>
-                <td class="py-3 text-gray-600"><%= assignment.end_date&.strftime("%Y/%m/%d") || "—" %></td>
+                <td class="py-3 pr-3 font-medium text-gray-800"><%= assignment.employee.name %></td>
+                <td class="py-3 pr-3 text-gray-600 whitespace-nowrap"><%= assignment.start_date&.strftime("%Y/%m/%d") %></td>
+                <td class="py-3 pr-3 text-gray-600 whitespace-nowrap"><%= assignment.end_date&.strftime("%Y/%m/%d") || "—" %></td>
                 <td class="py-3">
                   <%= link_to "詳細", assignment, class: "text-blue-600 hover:underline" %>
                 </td>

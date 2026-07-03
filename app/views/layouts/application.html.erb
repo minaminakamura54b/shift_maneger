@@ -37,6 +37,9 @@
               <%= link_to "社員", employees_path, class: "hover:text-blue-200 transition" %>
               <%= link_to "配置", assignments_path, class: "hover:text-blue-200 transition" %>
               <%= link_to "カレンダー", calendar_assignments_path, class: "hover:text-blue-200 transition" %>
+              <% if current_employee %>
+                <%= link_to "自分の配置", employee_path(current_employee), class: "hover:text-blue-200 transition" %>
+              <% end %>
               <span class="text-blue-300">|</span>
               <%= link_to current_user.email, edit_user_registration_path, class: "text-blue-200 text-xs hover:text-white hover:underline" %>
               <%= link_to "ログアウト", destroy_user_session_path, data: { turbo_method: :delete }, class: "bg-blue-500 hover:bg-blue-400 px-3 py-1 rounded transition" %>
@@ -59,6 +62,9 @@
             <%= link_to "社員管理", employees_path, class: "block py-2 hover:text-blue-200" %>
             <%= link_to "配置管理", assignments_path, class: "block py-2 hover:text-blue-200" %>
             <%= link_to "カレンダー", calendar_assignments_path, class: "block py-2 hover:text-blue-200" %>
+            <% if current_employee %>
+              <%= link_to "自分の配置", employee_path(current_employee), class: "block py-2 hover:text-blue-200" %>
+            <% end %>
             <div class="pt-2 border-t border-blue-600">
               <%= link_to "アカウント設定（#{current_user.email}）", edit_user_registration_path, class: "block py-2 text-blue-200 hover:text-white" %>
               <%= link_to "ログアウト", destroy_user_session_path, data: { turbo_method: :delete }, class: "block py-2 text-blue-200 hover:text-white" %>
