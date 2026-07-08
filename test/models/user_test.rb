@@ -29,6 +29,15 @@ class UserTest < ActiveSupport::TestCase
     assert_nil User.find_by(email: "broken-sync@example.com")
   end
 
+  test "バリデーションエラーは日本語で表示される" do
+    user = User.new
+    user.valid?
+
+    assert_equal "ja", I18n.default_locale.to_s
+    assert_includes user.errors.full_messages, "メールアドレスを入力してください"
+    assert_includes user.errors.full_messages, "パスワードを入力してください"
+  end
+
   test "ユーザーを削除すると紐づく社員レコードと配置も削除される" do
     user     = User.create!(email: "leaving@example.com", password: "password", name: "退職太郎")
     employee = Employee.find_by(email: "leaving@example.com")

@@ -154,7 +154,9 @@ class AssignmentsControllerTest < ActionDispatch::IntegrationTest
   test "一般ユーザーの詳細画面には他人の配置に編集・削除リンクが出ない" do
     sign_in users(:alice)
     get assignment_path(@bob_assignment)
-    assert_not_includes @response.body, "編集"
-    assert_not_includes @response.body, "削除"
+    # ナビゲーションバー（アカウント設定に「削除」の文言を含む）は対象外にし、
+    # 配置詳細カード内に編集・削除リンクが無いことだけを確認する
+    assert_select "main a", text: "編集", count: 0
+    assert_select "main a", text: "削除", count: 0
   end
 end
