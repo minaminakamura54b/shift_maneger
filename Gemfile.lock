@@ -300,7 +300,7 @@ GEM
     regexp_parser (2.12.0)
     reline (0.6.3)
       io-console (~> 0.5)
-    resend (1.5.0)
+    resend (1.6.0)
       base64
       httparty (>= 0.22.0)
     responders (3.2.0)
@@ -576,7 +576,7 @@ CHECKSUMS
   rdoc (7.2.0) sha256=8650f76cd4009c3b54955eb5d7e3a075c60a57276766ebf36f9085e8c9f23192
   regexp_parser (2.12.0) sha256=35a916a1d63190ab5c9009457136ae5f3c0c7512d60291d0d1378ba18ce08ebb
   reline (0.6.3) sha256=1198b04973565b36ec0f11542ab3f5cfeeec34823f4e54cebde90968092b1835
-  resend (1.5.0) sha256=26a2e9d4e32c1f33eadf25b53810b0b78af73f85440d7d6fa6c340fdd6e3ca46
+  resend (1.6.0) sha256=d87038284a3687ec42b1e88b973c481bd5c27486cf3d7e25082c0b4889bd0b49
   responders (3.2.0) sha256=89c2d6ac0ae16f6458a11524cae4a8efdceba1a3baea164d28ee9046bd3df55a
   rexml (3.4.4) sha256=19e0a2c3425dfbf2d4fc1189747bdb2f849b6c5e74180401b15734bc97b5d142
   rubocop (1.88.0) sha256=e420ddf1662d0ef34bc8a2910ac4b396a7ddda0b51a708264405241734b08e0b
