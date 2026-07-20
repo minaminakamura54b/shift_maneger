@@ -14,6 +14,11 @@ module ShiftManager
     # アプリ全体で日本語をデフォルトロケールにする（バリデーションエラー等もすべて日本語化するため）
     config.i18n.default_locale = :ja
 
+    # タイムゾーンを東京に統一する（DBは常にUTCで保存されるが、Time.current/Time.zone.now が
+    # このタイムゾーンで解釈される。EB環境ではサーバーのシステム時刻がUTCのため、
+    # コード側では Time.now ではなく必ず Time.current を使うこと）
+    config.time_zone = "Tokyo"
+
     # Please, add to the `ignore` list any other `lib` subdirectories that do
     # not contain `.rb` files, or that should not be reloaded or eager loaded.
     # Common ones are `templates`, `generators`, or `middleware`, for example.

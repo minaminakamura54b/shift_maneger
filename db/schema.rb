@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_02_090000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_09_042225) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -26,6 +26,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_02_090000) do
     t.datetime "updated_at", null: false
     t.index ["employee_id"], name: "index_assignments_on_employee_id"
     t.index ["site_id"], name: "index_assignments_on_site_id"
+  end
+
+  create_table "attendance_records", force: :cascade do |t|
+    t.bigint "assignment_id"
+    t.datetime "clocked_in_at", null: false
+    t.datetime "clocked_out_at"
+    t.datetime "created_at", null: false
+    t.datetime "deleted_at"
+    t.bigint "employee_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["assignment_id"], name: "index_attendance_records_on_assignment_id"
+    t.index ["clocked_in_at"], name: "index_attendance_records_on_clocked_in_at"
+    t.index ["deleted_at"], name: "index_attendance_records_on_deleted_at"
+    t.index ["employee_id"], name: "index_attendance_records_on_employee_id"
+    t.index ["employee_id"], name: "index_attendance_records_on_employee_open_record", unique: true, where: "((clocked_out_at IS NULL) AND (deleted_at IS NULL))"
   end
 
   create_table "employees", force: :cascade do |t|
@@ -65,4 +80,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_02_090000) do
 
   add_foreign_key "assignments", "employees"
   add_foreign_key "assignments", "sites"
+  add_foreign_key "attendance_records", "assignments"
+  add_foreign_key "attendance_records", "employees"
 end

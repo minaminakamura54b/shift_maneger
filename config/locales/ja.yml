@@ -42,6 +42,7 @@ ja:
       employee: "社員"
       site: "現場"
       assignment: "配置"
+      attendance_record: "勤怠記録"
     attributes:
       user:
         email: "メールアドレス"
@@ -67,6 +68,11 @@ ja:
         end_date: "終了日"
         start_time: "開始時刻"
         end_time: "終了時刻"
+      attendance_record:
+        employee: "社員"
+        assignment: "配置"
+        clocked_in_at: "出勤時刻"
+        clocked_out_at: "退勤時刻"
   errors:
     format: "%{attribute}%{message}"
     messages:

@@ -6,4 +6,10 @@ module ApplicationHelper
     base = key.is_a?(String) ? key.sum : key
     base * 61 % 360
   end
+
+  # 秒数を「◯時間◯分」の表記に変換する（勤怠の実働時間表示で使用）
+  def format_duration(seconds)
+    total_minutes = (seconds / 60).floor
+    "#{total_minutes / 60}時間#{total_minutes % 60}分"
+  end
 end

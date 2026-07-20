@@ -39,6 +39,10 @@
               <%= link_to "カレンダー", calendar_assignments_path, class: "hover:text-blue-200 transition" %>
               <% if current_employee %>
                 <%= link_to "自分の配置", employee_path(current_employee), class: "hover:text-blue-200 transition" %>
+                <%= link_to "勤怠", attendance_records_path, class: "hover:text-blue-200 transition" %>
+              <% end %>
+              <% if current_user.admin? %>
+                <%= link_to "勤怠管理", all_attendance_records_path, class: "hover:text-blue-200 transition" %>
               <% end %>
               <span class="text-blue-300">|</span>
               <%= link_to current_user.email, edit_user_registration_path, class: "text-blue-200 text-xs hover:text-white hover:underline" %>
@@ -64,6 +68,10 @@
             <%= link_to "カレンダー", calendar_assignments_path, class: "block py-2 hover:text-blue-200" %>
             <% if current_employee %>
               <%= link_to "自分の配置", employee_path(current_employee), class: "block py-2 hover:text-blue-200" %>
+              <%= link_to "勤怠", attendance_records_path, class: "block py-2 hover:text-blue-200" %>
+            <% end %>
+            <% if current_user.admin? %>
+              <%= link_to "勤怠管理（全社員）", all_attendance_records_path, class: "block py-2 hover:text-blue-200" %>
             <% end %>
             <div class="pt-2 border-t border-blue-600">
               <%= link_to "メール・パスワードの変更・削除（#{current_user.email}）", edit_user_registration_path, class: "block py-2 text-blue-200 hover:text-white" %>

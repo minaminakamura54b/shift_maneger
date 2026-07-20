@@ -20,6 +20,11 @@ class DeviseRegistrationTest < ActionDispatch::IntegrationTest
     assert user.present?
     assert_not user.confirmed?
 
+    # root_path は認証必須のため、そこへリダイレクトすると案内メッセージがログイン画面への
+    # 再リダイレクトで消えてしまう。ログイン画面へ直接遷移し、メッセージが表示されることを確認する
+    assert_redirected_to new_user_session_path
+    assert_equal "確認用リンクを記載したメールを送信しました。メール内のリンクからアカウントを有効化してください。", flash[:notice]
+
     mail = ActionMailer::Base.deliveries.last
     assert_equal [ "shinki@example.com" ], mail.to
 
@@ -71,18 +76,23 @@ class DeviseRegistrationTest < ActionDispatch::IntegrationTest
     assert_redirected_to root_path
   end
 
-  test "アカウント削除画面から削除すると社員レコードと配置も一緒に削除される" do
+  test "アカウント削除画面から削除すると社員レコードと配置は消えるが現場データは残る" do
     alice    = users(:alice)
     employee = employees(:alice)
     assignment_ids = employee.assignments.ids
+    site           = assignment_ids.any? ? Assignment.find(assignment_ids.first).site : nil
     assert_not_empty assignment_ids
+    assert site.present?
 
     sign_in alice
 
     assert_difference [ "User.count", "Employee.count" ], -1 do
-      delete user_registration_path
+      assert_no_difference "Site.count" do
+        delete user_registration_path
+      end
     end
     assert_redirected_to root_path
+    assert Site.exists?(site.id), "現場データは削除されずに残っているべき"
 
     assert_nil Employee.find_by(id: employee.id)
     assignment_ids.each { |id| assert_nil Assignment.find_by(id: id) }

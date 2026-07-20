@@ -9,6 +9,7 @@
 
 # Ignore all environment files.
 /.env*
+!/.env.example
 
 # Ignore all logfiles and tempfiles.
 /log/*
@@ -41,3 +42,12 @@
 .elasticbeanstalk/*
 !.elasticbeanstalk/*.cfg.yml
 !.elasticbeanstalk/*.global.yml
+
+# OS/エディタが生成するファイル
+.DS_Store
+.idea/
+*.swp
+
+# AI(Claude Code)向けの作業指示・インフラ情報。EB環境名やドメインなど
+# 偵察材料になりうる情報を含むため公開リポジトリには含めない（ローカルには残す）
+/CLAUDE.md
